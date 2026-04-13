@@ -1,0 +1,54 @@
+# Phase 1: Minimal cold-start baseline
+# ResNet-18 (random init), 2 per class, retrain from scratch each round
+
+dataset:
+  budget: 15000          # 10 rounds × query_size 20
+  classifier_fitting_mode: from_scratch
+  initial_points_per_class: 100
+  classifier_batch_size: 64
+  validation_split: 0.04
+
+classifier:
+  type: Resnet18
+
+optimizer:
+  type: NAdam
+  lr: 0.001
+  weight_decay: 0.0
+
+# Embedded path (unused here, kept for compatibility)
+dataset_embedded:
+  encoder_checkpoint: ""
+  budget: 200
+  classifier_fitting_mode: from_scratch
+  initial_points_per_class: 2
+  classifier_batch_size: 64
+
+classifier_embedded:
+  type: Linear
+
+optimizer_embedded:
+  type: NAdam
+  lr: 0.001
+  weight_decay: 0.0
+
+# SimCLR pretext (for reference / future use)
+pretext_encoder:
+  type: Resnet18
+  feature_dim: 128
+
+pretext_optimizer:
+  type: SGD
+  lr: 0.4
+  nesterov: False
+  weight_decay: 0.0001
+  momentum: 0.9
+  lr_scheduler: cosine
+  lr_scheduler_decay: 0.1
+
+pretext_clr_loss:
+  temperature: 0.1
+
+pretext_training:
+  batch_size: 512
+  epochs: 500

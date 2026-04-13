@@ -1,0 +1,60 @@
+# Phase 3: Frozen pretrained backbone — ablation reference
+# ResNet-18 with SimCLR/MoCo weights, backbone frozen, only linear head trained
+#
+# IMPORTANT: set pretrained_path to your actual checkpoint before running.
+# Acceptable formats:
+#   - A SimCLR ContrastiveModel checkpoint (backbone.* keys)
+#   - A raw ResNet-18 state_dict
+
+dataset:
+  budget: 200
+  classifier_fitting_mode: from_scratch
+  initial_points_per_class: 2
+  classifier_batch_size: 64
+  validation_split: 0.04
+
+classifier:
+  type: Resnet18
+  pretrained_path: "encoder_checkpoints/cifar10/model_seed1.pth.tar"
+  freeze_backbone: True
+
+optimizer:
+  type: NAdam
+  lr: 0.005
+  weight_decay: 0.0
+
+# Embedded path (unused)
+dataset_embedded:
+  encoder_checkpoint: ""
+  budget: 200
+  classifier_fitting_mode: from_scratch
+  initial_points_per_class: 2
+  classifier_batch_size: 64
+
+classifier_embedded:
+  type: Linear
+
+optimizer_embedded:
+  type: NAdam
+  lr: 0.001
+  weight_decay: 0.0
+
+pretext_encoder:
+  type: Resnet18
+  feature_dim: 128
+
+pretext_optimizer:
+  type: SGD
+  lr: 0.4
+  nesterov: False
+  weight_decay: 0.0001
+  momentum: 0.9
+  lr_scheduler: cosine
+  lr_scheduler_decay: 0.1
+
+pretext_clr_loss:
+  temperature: 0.1
+
+pretext_training:
+  batch_size: 512
+  epochs: 500

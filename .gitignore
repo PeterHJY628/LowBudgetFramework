@@ -1,0 +1,29 @@
+# 数据和模型
+data_lib/
+encoder_checkpoints/
+runs/
+__pycache__/
+*.pyc
+
+# 结果（生成文件）
+results/
+
+# 日志
+logs/
+*.out
+*.err
+
+# 环境
+.env
+*.tar
+*.pth
+*.pth.tar
+
+# Windows Zone.Identifier 元数据
+*:Zone.Identifier
+*:Zone.Identifier:Zone.Identifier
+
+# IDE
+.vscode/
+.idea/
+.cursor/
