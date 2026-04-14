@@ -1,4 +1,4 @@
-from training import AverageMeter
+from sim_clr.training import AverageMeter
 import torch
 import torch.nn as nn
 from core.helper_functions import EarlyStopping
