@@ -4,6 +4,8 @@ ALGame subclass for TranOne experiments: allow zero initial labeled samples.
 The upstream ALGame.reset() always calls _fit_classifier(); with an empty labeled
 pool that breaks. Here we skip training until at least one sample is labeled.
 """
+import torch
+
 from core.environment import ALGame
 
 
