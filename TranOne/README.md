@@ -93,6 +93,10 @@ A **manifest** JSON is written at the end of a driver invocation:
 
 `TranOne/results/<dataset>/tranone_<al_agent>_<qtag>_manifest.json`
 
+## Troubleshooting
+
+- **`TranOne/TranOne/run_tranone.py` not found:** You ran a helper `.sh` from **inside** `TranOne/` while it still used `python TranOne/run_tranone.py`. Use the latest `run_tranone_*.sh` in the repo root (they auto-detect `run_tranone.py`), or from repo root run `python TranOne/run_tranone.py ...`.
+
 ## Code files
 
 | File | Role |
