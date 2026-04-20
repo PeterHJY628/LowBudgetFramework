@@ -1,14 +1,15 @@
-# CSA-DINOv3: Cross-Domain Active Learning Benchmark with DINOv3
+# TranTest — Cross-Domain Active Learning Benchmark
 
-A cross-domain benchmark for comparing active learning (AL) acquisition strategies, built on a Gym-style environment. This fork integrates **DINOv3 (ViT)** as the backbone feature extractor for image datasets, using a frozen pretrained Vision Transformer with a linear classification head.
+**TranTest** is this working copy of the codebase. It implements a cross-domain benchmark for comparing active learning (AL) acquisition strategies in a Gym-style environment. The default **raw-image** path uses **DINOv3 (ViT)** as a backbone with a linear probe; an alternative **encoded** path uses a **SimCLR-style ResNet-18** encoder trained via the pretext task, then a linear or MLP head on frozen features.
 
-Based on the NeurIPS 2024 submission *"A Cross Domain-Benchmark for Active Learning"*. Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Lineage: NeurIPS 2024 submission *"A Cross Domain-Benchmark for Active Learning"* (CSA-DINOv3-style fork). Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
 ---
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Model Architecture](#model-architecture)
 - [Project Structure](#project-structure)
 - [Dependencies](#dependencies)
 - [Quick Start](#quick-start)
@@ -39,10 +40,78 @@ Two classification pathways are supported:
 
 ---
 
+## Model Architecture
+
+This section describes **which networks exist**, **how data flows through them**, and **where they are constructed**. Each run uses either the raw-image pathway or the encoded pathway (`evaluate.py` and `--encoded`), not both at once.
+
+### Big picture
+
+```mermaid
+flowchart TB
+  subgraph raw_path [Raw data pathway]
+    X1[Dataset tensor] --> P1[Preprocess to ViT input]
+    P1 --> V[DINOv3 ViT backbone]
+    V --> H1[Linear probe]
+    H1 --> L1[Class logits]
+  end
+  subgraph ssl [SimCLR pretraining]
+    X2[Two augmented views] --> R[ResNet-18 trunk]
+    R --> M[MLP projection head]
+    M --> Z[L2-normalized features]
+    Z --> NT[NT-Xent / memory bank]
+  end
+  subgraph enc_path [Encoded AL pathway]
+    X3[Images or cached features] --> R2[Frozen SSL backbone]
+    R2 --> H2[Linear or MLP head]
+    H2 --> L2[Class logits]
+  end
+```
+
+The **AL loop** (`core/environment.py`, `evaluate.py`) repeatedly fits the classifier on the current labeled pool; an **acquisition agent** (`agents/*`) scores unlabeled samples using the current model (logits, gradients, etc., depending on the agent).
+
+### Pathway A — DINOv3 on raw pixels
+
+- **Purpose**: Strong off-the-shelf visual features for AL on full-resolution inputs after resizing.
+- **Backbone**: Hugging Face `AutoModel` from `classifier.model_name` (default DINOv3 ViT-B/16). If `freeze_backbone: true`, backbone weights are fixed and only the head updates.
+- **Head**: `SeededLinear(hidden_size, num_classes)` in `DINOv3Classifier` (`classifiers/classifier.py`).
+- **Forward path**: `DINOv3Classifier._preprocess` converts normalized CIFAR tensors toward `[0,1]`, applies ImageNet mean/std, resizes (default bicubic to `input_size` 224), runs the ViT, and takes the pooled / CLS representation before the linear head.
+- **Configuration**: `dataset`, `classifier`, `optimizer` in `configs/*.yaml`.
+
+### Pathway B — SimCLR-style encoder + probe
+
+**Self-supervised encoder (pretext)**
+
+1. `BaseDataset.get_pretext_encoder()` in `core/data.py` calls `construct_model(..., config["pretext_encoder"], add_head=False)`.
+2. For CIFAR-10 YAML, `pretext_encoder.type` is **Resnet18** (`classifiers/resnet.py`): the **convolutional ResNet-18 body** without the final `linear` classifier. Global average pooling yields a **512-dimensional** vector; `encoder_dim` is stored on the config at runtime.
+3. That backbone is wrapped in **`ContrastiveModel`** (`sim_clr/encoder.py`): **512 → MLP** (`Linear → ReLU → Linear`) to `pretext_encoder.feature_dim` (e.g. **128**) followed by **L2 normalization** on the projection. This is the standard SimCLR-style head used with contrastive loss in `sim_clr/loss.py` and training in `train_encoder.py`.
+4. Augmentations come from each dataset’s `get_pretext_transforms` (e.g. `datasets/cifar10.py`: random crop/flip, color jitter, grayscale); optimization uses `pretext_optimizer`, batch size and epochs from `pretext_training`.
+
+**Downstream / AL on frozen features**
+
+- After SSL training, checkpoints are referenced from `dataset_embedded.encoder_checkpoint`. The environment encodes images (or loads cached embeddings), then trains **`classifier_embedded`**: usually **`LinearModel`** (single linear layer on feature vectors) or **`DenseModel`** (MLP), both from `construct_model` in `classifiers/classifier.py`.
+- Agents interact with the same `forward` interface as in the raw pathway; the difference is the input dimensionality and that the backbone is typically fixed for encoded runs.
+
+### Other classifier heads
+
+`construct_model()` also wires **supervised ResNet-18 with head** (optional `pretrained_path` and `freeze_backbone`), **MLP** stacks (`DenseModel`), and **BiLSTM** for text datasets (`classifiers/classifier.py`).
+
+### Quick reference — code locations
+
+| Topic | Location |
+|--------|-----------|
+| Build SSL model (backbone + projection) | `core/data.py` → `get_pretext_encoder` |
+| ResNet-18 trunk | `classifiers/resnet.py` |
+| SimCLR projection + normalize | `sim_clr/encoder.py` → `ContrastiveModel` |
+| DINOv3 + linear probe | `classifiers/classifier.py` → `DINOv3Classifier` |
+| YAML-driven `type` dispatch | `construct_model()` in `classifiers/classifier.py` |
+| AL environment step / retraining | `core/environment.py`, `evaluate.py` |
+
+---
+
 ## Project Structure
 
 ```
-CSA-DINOv3/
+TranTest/
 ├── evaluate.py                 # Main entry point — runs the AL loop
 ├── evaluate_oracle.py          # Greedy oracle baseline
 ├── compute_upper_bound.py      # Full-dataset upper bound
