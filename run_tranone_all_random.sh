@@ -1,6 +1,6 @@
 #!/bin/bash -l
-#SBATCH --output=/scratch/users/%u/logs/tranone_all_random_%j.out
-#SBATCH --error=/scratch/users/%u/logs/tranone_all_random_%j.err
+#SBATCH --output=/users/%u/logs/tranone_all_random_%j.out
+#SBATCH --error=/users/%u/logs/tranone_all_random_%j.err
 #SBATCH --job-name=tranone_rand
 #SBATCH --partition=gpu
 #SBATCH --constraint=a100
@@ -21,13 +21,13 @@ set -euo pipefail
 # Examples:
 #   sbatch run_tranone_all_random.sh /scratch/users/${USER}/data_lib 1 0.05 cifar10
 
-REPO_ROOT="/scratch/users/k25130670/TranTest"
-cd /scratch/users/k25130670/TranTest/TranOne
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${REPO_ROOT}"
 
 # module load anaconda3/2022.10-gcc-13.2.0
 # source activate /scratch/users/${USER}/conda/myenv
 
-DATA_FOLDER="${1:-/scratch/users/k25130670/TranTest/data_lib}"
+DATA_FOLDER="${1:-data_lib}"
 RESTARTS="${2:-1}"
 QUERY_FRAC="${3:-0.05}"
 DATASET="${4:-cifar10}"
