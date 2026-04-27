@@ -41,6 +41,23 @@ DATA_FOLDER="${1:-data_lib}"
 RESTARTS="${2:-1}"
 QUERY_FRAC="${3:-0.05}"
 DATASET="${4:-cifar10}"
+CONFIG="${5:-${_SCRIPT_DIR}/TranOne/configs/tranone_${DATASET}.yaml}"
+QUERY_FRAC_FIRST="${6:-}"
+QUERY_FRAC_REST="${7:-}"
+
+if [[ -n "${QUERY_FRAC_FIRST}" || -n "${QUERY_FRAC_REST}" ]]; then
+  if [[ -z "${QUERY_FRAC_FIRST}" || -z "${QUERY_FRAC_REST}" ]]; then
+    echo "Error: --query_frac_first and --query_frac_rest must be provided together." >&2
+    exit 1
+  fi
+  if [[ -n "${QUERY_FRAC}" && "${QUERY_FRAC}" != "0.05" ]]; then
+    echo "Error: provide either QUERY_FRAC or (QUERY_FRAC_FIRST and QUERY_FRAC_REST), not both." >&2
+    exit 1
+  fi
+  QUERY_MODE_MSG="split first=${QUERY_FRAC_FIRST}, rest=${QUERY_FRAC_REST}"
+else
+  QUERY_MODE_MSG="uniform frac=${QUERY_FRAC}"
+fi
 
 echo "========================================"
 echo "TranOne: mode=all_random"
@@ -48,15 +65,25 @@ echo "Repo cwd:       $(pwd)"
 echo "Driver:         ${_TRANONE_PY}"
 echo "Data folder:    ${DATA_FOLDER}"
 echo "Dataset:        ${DATASET}"
-echo "Query frac:     ${QUERY_FRAC} (batch per round ~ this fraction of budget)"
+echo "Query setting:  ${QUERY_MODE_MSG}"
 echo "Restarts:       ${RESTARTS}"
 echo "========================================"
 
-python "${_TRANONE_PY}" \
-  --data_folder "${DATA_FOLDER}" \
-  --dataset "${DATASET}" \
-  --mode all_random \
-  --query_frac "${QUERY_FRAC}" \
+PY_ARGS=(
+  --data_folder "${DATA_FOLDER}"
+  --dataset "${DATASET}"
+  --config "${CONFIG}"
+  --mode all_random
   --restarts "${RESTARTS}"
+)
+
+if [[ -n "${QUERY_FRAC_FIRST}" && -n "${QUERY_FRAC_REST}" ]]; then
+  PY_ARGS+=(--query_frac_first "${QUERY_FRAC_FIRST}" --query_frac_rest "${QUERY_FRAC_REST}")
+else
+  PY_ARGS+=(--query_frac "${QUERY_FRAC}")
+fi
+
+python "${_TRANONE_PY}" \
+  "${PY_ARGS[@]}"
 
 echo "TranOne all_random finished."

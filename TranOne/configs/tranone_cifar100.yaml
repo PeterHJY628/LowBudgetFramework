@@ -1,5 +1,4 @@
-# TranOne default: supervised ResNet-18 on raw CIFAR-10, no seed labels (handled in run_tranone.py).
-# No DINOv3 / Hugging Face dependency for the baseline experiment driver.
+# TranOne: CIFAR-100, supervised ResNet-18 (same layout as tranone_cifar10.yaml).
 
 dataset:
   budget: 20000

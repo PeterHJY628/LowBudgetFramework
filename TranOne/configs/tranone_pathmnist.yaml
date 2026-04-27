@@ -1,5 +1,4 @@
-# TranOne default: supervised ResNet-18 on raw CIFAR-10, no seed labels (handled in run_tranone.py).
-# No DINOv3 / Hugging Face dependency for the baseline experiment driver.
+# TranOne: MedMNIST PathMNIST (9-class, 3x28x28). pip install medmnist
 
 dataset:
   budget: 20000

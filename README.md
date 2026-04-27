@@ -189,6 +189,7 @@ pip install torch torchvision gym matplotlib pandas scikit-learn \
     faiss-cpu nltk pyyaml transformers batchbald-redux huggingface-hub
 # Optional
 pip install "ray[tune]"
+pip install medmnist   # PathMNIST (`--dataset pathmnist`)
 ```
 
 > For text datasets (News / TopV2), NLTK tokenizer data is also needed:

@@ -17,8 +17,10 @@ all_names = [
     "mnist",
     "fashionmnist",
     "cifar10",
+    "cifar100",
+    "pathmnist",
     "TopV2",
-    "News"
+    "News",
 ]
 
 for name in all_names:

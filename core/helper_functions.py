@@ -62,6 +62,10 @@ initial_pool_size = {
     "USPSEncoded": 10,
     "Cifar10": 1000,
     "Cifar10Encoded":10,
+    "Cifar100": 1000,
+    "Cifar100Encoded": 10,
+    "PathMnist": 1000,
+    "PathMnistEncoded": 10,
     "FashionMnist": 1000,
     "FashionMnistEncoded": 10,
     "TopV2": 7,
@@ -387,6 +391,10 @@ def get_dataset_by_name(name:str)->Callable:
     # Image
     elif name == "cifar10":
         return datasets.Cifar10
+    elif name == "cifar100":
+        return datasets.Cifar100
+    elif name == "pathmnist":
+        return datasets.PathMnist
     elif name == "mnist":
         return datasets.Mnist
     elif name == "fashionmnist":

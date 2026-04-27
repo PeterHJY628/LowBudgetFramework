@@ -1,6 +1,3 @@
-# TranOne default: supervised ResNet-18 on raw CIFAR-10, no seed labels (handled in run_tranone.py).
-# No DINOv3 / Hugging Face dependency for the baseline experiment driver.
-
 dataset:
   budget: 20000
   classifier_fitting_mode: from_scratch

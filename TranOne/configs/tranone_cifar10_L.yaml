@@ -2,11 +2,11 @@
 # No DINOv3 / Hugging Face dependency for the baseline experiment driver.
 
 dataset:
-  budget: 20000
+  budget: 1000
   classifier_fitting_mode: from_scratch
   initial_points_per_class: 0
   classifier_batch_size: 64
-  validation_split: 0.04
+  validation_split: 0.005
 
 classifier:
   type: Resnet18

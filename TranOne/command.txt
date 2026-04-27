@@ -1,0 +1,15 @@
+python TranOne/analyze_tranone_results.py \
+  --results_dir TranOne/results/FashionMnist/tranone_qfrac0p05_B10000 \
+  --output_dir TranOne/results/FashionMnist/tranone_qfrac0p05_B10000/analysis_outputs
+
+bash run.sh
+
+python TranOne/run_tranone.py \
+  --data_folder data_lib \
+  --dataset fashionmnist \
+  --config TranOne/configs/tranone_fashionmnist.yaml \
+  --mode all_al \
+  --al_agent margin \
+  --query_frac_first 0.10 \
+  --query_frac_rest 0.05 \
+  --restarts 3

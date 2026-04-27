@@ -41,25 +41,54 @@ DATA_FOLDER="${1:-data_lib}"
 RESTARTS="${2:-1}"
 QUERY_FRAC="${3:-0.05}"
 DATASET="${4:-cifar10}"
+SWITCH_STEP="${5:-5}"
+SWITCH_AT="${6:-0.50}"
+CONFIG="${7:-${_SCRIPT_DIR}/TranOne/configs/tranone_${DATASET}.yaml}"
+QUERY_FRAC_FIRST="${8:-}"
+QUERY_FRAC_REST="${9:-}"
+
+if [[ -n "${QUERY_FRAC_FIRST}" || -n "${QUERY_FRAC_REST}" ]]; then
+  if [[ -z "${QUERY_FRAC_FIRST}" || -z "${QUERY_FRAC_REST}" ]]; then
+    echo "Error: --query_frac_first and --query_frac_rest must be provided together." >&2
+    exit 1
+  fi
+  if [[ -n "${QUERY_FRAC}" && "${QUERY_FRAC}" != "0.05" ]]; then
+    echo "Error: provide either QUERY_FRAC or (QUERY_FRAC_FIRST and QUERY_FRAC_REST), not both." >&2
+    exit 1
+  fi
+  QUERY_MODE_MSG="split first=${QUERY_FRAC_FIRST}, rest=${QUERY_FRAC_REST}"
+else
+  QUERY_MODE_MSG="uniform frac=${QUERY_FRAC}"
+fi
 
 echo "========================================"
-echo "TranOne: mode=switch step=5% grid switch_at=0.25 (25% budget)"
+echo "TranOne: mode=switch step=${SWITCH_STEP}% grid switch_at=${SWITCH_AT}"
 echo "Repo cwd:       $(pwd)"
 echo "Driver:         ${_TRANONE_PY}"
 echo "Data folder:    ${DATA_FOLDER}"
 echo "Dataset:        ${DATASET}"
-echo "Query frac:     ${QUERY_FRAC}"
+echo "Query setting:  ${QUERY_MODE_MSG}"
 echo "Restarts:       ${RESTARTS}"
 echo "========================================"
 
-python "${_TRANONE_PY}" \
-  --data_folder "${DATA_FOLDER}" \
-  --dataset "${DATASET}" \
-  --mode switch \
-  --switch-step 5 \
-  --switch-at 0.25 \
-  --al_agent margin \
-  --query_frac "${QUERY_FRAC}" \
+PY_ARGS=(
+  --data_folder "${DATA_FOLDER}"
+  --dataset "${DATASET}"
+  --config "${CONFIG}"
+  --mode switch
+  --switch-step "${SWITCH_STEP}"
+  --switch-at "${SWITCH_AT}"
+  --al_agent margin
   --restarts "${RESTARTS}"
+)
 
-echo "TranOne switch (5% grid @ 25%) finished."
+if [[ -n "${QUERY_FRAC_FIRST}" && -n "${QUERY_FRAC_REST}" ]]; then
+  PY_ARGS+=(--query_frac_first "${QUERY_FRAC_FIRST}" --query_frac_rest "${QUERY_FRAC_REST}")
+else
+  PY_ARGS+=(--query_frac "${QUERY_FRAC}")
+fi
+
+python "${_TRANONE_PY}" \
+  "${PY_ARGS[@]}"
+
+echo "TranOne switch (% grid step=${SWITCH_STEP} @ ${SWITCH_AT}) finished."

@@ -6,7 +6,7 @@ dataset:
   classifier_fitting_mode: from_scratch
   initial_points_per_class: 0
   classifier_batch_size: 64
-  validation_split: 0.04
+  validation_split: 0.10
 
 classifier:
   type: Resnet18

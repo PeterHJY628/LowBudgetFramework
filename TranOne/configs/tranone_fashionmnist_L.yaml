@@ -1,12 +1,9 @@
-# TranOne default: supervised ResNet-18 on raw CIFAR-10, no seed labels (handled in run_tranone.py).
-# No DINOv3 / Hugging Face dependency for the baseline experiment driver.
-
 dataset:
-  budget: 20000
-  classifier_fitting_mode: from_scratch
+  budget: 1000
+  classifier_fitting_mode: finetuning
   initial_points_per_class: 0
   classifier_batch_size: 64
-  validation_split: 0.04
+  validation_split: 0.005
 
 classifier:
   type: Resnet18
@@ -14,23 +11,25 @@ classifier:
 optimizer:
   type: NAdam
   lr: 0.001
-  weight_decay: 0.0001
+  weight_decay: 0.0
 
 dataset_embedded:
-  encoder_checkpoint: encoder_checkpoints/cifar10_27.03/model_seed1.pth.tar
-  budget: 200
+  encoder_checkpoint: encoder_checkpoints/fashion_mnist_17.04/model_seed1.pth.tar
+  budget: 500
   classifier_fitting_mode: from_scratch
-  initial_points_per_class: 0
+  initial_points_per_class: 1
   classifier_batch_size: 64
 
 classifier_embedded:
   type: Linear
+  dropout: 0.05
 
 optimizer_embedded:
-  type: NAdam
-  lr: 0.001
-  weight_decay: 1.0e-05
+  type: Adam
+  lr: 0.00167934377193017
+  weight_decay: 1.0272188756302E-05
 
+# Pretext Task (SimCLR)
 pretext_encoder:
   type: Resnet18
   feature_dim: 128
@@ -38,7 +37,7 @@ pretext_encoder:
 pretext_optimizer:
   type: SGD
   lr: 0.4
-  nesterov: false
+  nesterov: False
   weight_decay: 0.0001
   momentum: 0.9
   lr_scheduler: cosine
